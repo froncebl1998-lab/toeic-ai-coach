@@ -37,30 +37,91 @@ export default function Lessons() {
   }
 
   const makeQuiz=(l:Lesson)=>{
-    const qs:any[]=[];
-    const bad=[...l.traps,l.shortcut,"เลือกคำตอบเพราะเห็นคำคุ้นเคย"];
-    for(let n=0;n<4;n++){
-      const correct=l.rules[n%l.rules.length];
-      const options=[correct,bad[n%bad.length],bad[(n+1)%bad.length],bad[(n+2)%bad.length]];
-      const shift=n%4;
-      const choices=[...options.slice(shift),...options.slice(0,shift)];
-      qs.push({
-        q:"ข้อ "+(n+1)+": ข้อใดถูกต้องตามบทนี้?",
-        choices,
-        a:choices.indexOf(correct),
-        why:"เหตุผล: "+correct
-      });
-    }
-    const correctEx=l.examples[0]||l.rules[0];
-    const options=[correctEx,l.traps[0]||"เลือกตัวเลือกที่ยาวที่สุด",l.traps[1]||"เลือกจากคำที่คุ้นเคย",l.shortcut];
-    const choices=[...options.slice(1),options[0]];
-    qs.push({
-      q:"ข้อ 5: ข้อใดเป็นตัวอย่างหรือหลักที่นำไปใช้ได้ถูกต้อง?",
-      choices,
-      a:choices.indexOf(correctEx),
-      why:"ตัวอย่างหลักของบท: "+correctEx
-    });
-    return qs;
+    type Q={q:string;choices:string[];a:number;why:string};
+    const banks:Record<string,Q[]>={
+      "Foundation 01":[
+        {q:"Choose the correct sentence.",choices:["The manager works here.","The manager here works?","Works the manager here.","The manager working here."],a:0,why:"The manager = Subject, works = Verb."},
+        {q:"In “Sara reads the report,” what is the object?",choices:["Sara","reads","the report","Sara reads"],a:2,why:"The report receives the action, so it is the Object."},
+        {q:"Which sentence has Subject + Verb only?",choices:["They work.","They read the report.","They are managers.","They work in Bangkok."],a:0,why:"They = Subject and work = Verb; there is no Object."},
+        {q:"What is the Subject in “The employees attend the meeting”?",choices:["employees","attend","meeting","the"],a:0,why:"The employees are the people doing the action."},
+        {q:"Choose the best word order.",choices:["The staff checks the email.","Checks the staff the email.","The email the staff checks.","Checks the email the staff."],a:0,why:"A basic English sentence commonly follows Subject + Verb + Object."}
+      ],
+      "Foundation 02":[
+        {q:"___ am ready for work.",choices:["I","He","They","She"],a:0,why:"I is used for the speaker and takes am."},
+        {q:"___ is our new manager.",choices:["They","We","He","I"],a:2,why:"He refers to one male person and takes is."},
+        {q:"Maria and John are here. ___ are employees.",choices:["He","She","It","They"],a:3,why:"Two people are plural, so use They."},
+        {q:"The computer is new. ___ is fast.",choices:["He","She","It","They"],a:2,why:"It can refer to a singular thing."},
+        {q:"My coworkers and I are busy. ___ have a meeting.",choices:["We","They","He","It"],a:0,why:"My coworkers and I = We."}
+      ],
+      "Foundation 03":[
+        {q:"I ___ a new employee.",choices:["am","is","are","be"],a:0,why:"I always pairs with am in the present."},
+        {q:"The manager ___ busy today.",choices:["am","are","is","be"],a:2,why:"The manager is singular, so use is."},
+        {q:"The employees ___ in the office.",choices:["am","is","are","be"],a:2,why:"The employees are plural, so use are."},
+        {q:"Which sentence is correct?",choices:["She are ready.","She is ready.","She am ready.","She be ready."],a:1,why:"She + is is the correct pair."},
+        {q:"Which sentence is correct?",choices:["They is late.","They am late.","They are late.","They be late."],a:2,why:"They + are is the correct pair."}
+      ],
+      "Foundation 04":[
+        {q:"The company needs a new ___.",choices:["manager","manage","successful","quickly"],a:0,why:"After a/an, a noun is needed: manager."},
+        {q:"The team works ___.",choices:["efficient","efficiency","efficiently","efficiencies"],a:2,why:"Efficiently is an adverb describing how the team works."},
+        {q:"The company is ___.",choices:["successfully","success","successful","succeed"],a:2,why:"After is, an adjective can describe the subject: successful."},
+        {q:"Employees ___ the system every day.",choices:["useful","use","usefully","usage"],a:1,why:"Employees need a verb: use."},
+        {q:"She is a ___ employee.",choices:["carefully","careful","care","caringly"],a:1,why:"An adjective describes the noun employee."}
+      ],
+      "Foundation 05":[
+        {q:"She is ___ employee.",choices:["a","an","the","two"],a:1,why:"Employee begins with a vowel sound, so use an."},
+        {q:"I bought ___ laptop yesterday.",choices:["a","an","two","the"],a:0,why:"A singular countable noun can use a when it is not specific."},
+        {q:"Please read ___ report on my desk.",choices:["a","an","the","many"],a:2,why:"The report is specific: the one on my desk."},
+        {q:"There are three ___ in the office.",choices:["employee","employees","an employee","the employee"],a:1,why:"Three requires a plural countable noun: employees."},
+        {q:"Which is correct?",choices:["an company","a company","a companies","an companies"],a:1,why:"Company is singular and starts with a consonant sound, so a company."}
+      ],
+      "Foundation 06":[
+        {q:"She ___ to work every day.",choices:["go","goes","went","will go"],a:1,why:"Every day signals present simple; she takes goes."},
+        {q:"They ___ the report yesterday.",choices:["finish","finishes","finished","will finish"],a:2,why:"Yesterday signals the past, so use finished."},
+        {q:"We ___ the client tomorrow.",choices:["meet","met","meets","will meet"],a:3,why:"Tomorrow signals the future; will + V1."},
+        {q:"Which sentence is correct?",choices:["He work every day.","He works every day.","He worked every day tomorrow.","He will works tomorrow."],a:1,why:"Present simple with he requires works."},
+        {q:"Which sentence is correct?",choices:["She will went.","She will go.","She will goes.","She going tomorrow."],a:1,why:"After will, use the base verb: go."}
+      ],
+      "Foundation 07":[
+        {q:"___ is the meeting?",choices:["Who","When","Why","Who"],a:1,why:"When asks about time."},
+        {q:"___ is your supervisor?",choices:["Who","When","Where","How often"],a:0,why:"Who asks about a person."},
+        {q:"___ is the new office?",choices:["Why","When","Where","Who"],a:2,why:"Where asks about a place."},
+        {q:"___ did you cancel the meeting?",choices:["Why","Who","Where","When"],a:0,why:"Why asks for a reason."},
+        {q:"___ do you exercise?",choices:["How often","Who","Where","Why"],a:0,why:"How often asks about frequency."}
+      ],
+      "Foundation 08":[
+        {q:"The meeting starts ___ 9 a.m.",choices:["in","on","at","to"],a:2,why:"Use at for a specific clock time."},
+        {q:"We have a meeting ___ Monday.",choices:["at","on","in","from"],a:1,why:"Use on with days."},
+        {q:"She started the job ___ 2026.",choices:["at","on","in","to"],a:2,why:"Use in with years."},
+        {q:"He goes ___ the office every morning.",choices:["at","to","in","on"],a:1,why:"Go + to + destination."},
+        {q:"The training is ___ June.",choices:["at","on","in","to"],a:2,why:"Use in with months."}
+      ],
+      "Foundation 09":[
+        {q:"___ you work here?",choices:["Do","Does","Did","Are"],a:0,why:"You takes do in present simple questions."},
+        {q:"___ she work here?",choices:["Do","Does","Did","Is"],a:1,why:"She takes does; the main verb stays V1: work."},
+        {q:"___ they go to Bangkok yesterday?",choices:["Do","Does","Did","Are"],a:2,why:"Yesterday requires past simple, so use did + V1."},
+        {q:"He doesn't ___ coffee.",choices:["drinks","drink","drank","drinking"],a:1,why:"After doesn't, use the base verb drink."},
+        {q:"Which is correct?",choices:["Did you went?","Did you go?","Did you goes?","Did you going?"],a:1,why:"Did + subject + V1: Did you go?"}
+      ],
+      "Foundation 10":[
+        {q:"The ___ works in our company.",choices:["employee","schedule","month","hotel"],a:0,why:"Employee means พนักงาน."},
+        {q:"Please check the ___ for tomorrow's meeting.",choices:["schedule","employee","people","office"],a:0,why:"Schedule means กำหนดการ/ตารางเวลา."},
+        {q:"The meeting is in the ___.",choices:["office","employee","schedule","people"],a:0,why:"Office is a place where a meeting can happen."},
+        {q:"We stayed at a ___ during the business trip.",choices:["hotel","employee","schedule","company"],a:0,why:"Hotel is a place to stay during a trip."},
+        {q:"Our ___ has 500 employees.",choices:["company","month","people","day"],a:0,why:"Company means บริษัท."}
+      ]
+    };
+
+    const qs=banks[l.category];
+    if(qs) return qs;
+
+    const topic=l.title.replace(/^.*?:\\s*/,"");
+    return [
+      {q:"Choose the best word: The manager will ___ the meeting.",choices:["attend","attendance","attentive","attending"],a:0,why:"After will, use the base verb: attend."},
+      {q:"Choose the best word: Please ___ the report before Friday.",choices:["review","reviewer","reviewed","reviewing"],a:0,why:"After please, use the base verb review."},
+      {q:"Choose the best word: The new employee is very ___.",choices:["helpful","help","helpfully","helped"],a:0,why:"After is, an adjective can describe the employee."},
+      {q:"Choose the best word: We have a meeting ___ Monday.",choices:["at","on","in","to"],a:1,why:"Use on with days."},
+      {q:"Choose the best word: They ___ the customer yesterday.",choices:["call","calls","called","calling"],a:2,why:"Yesterday signals past simple: called."}
+    ];
   };
 
   const quiz=makeQuiz(lesson);
