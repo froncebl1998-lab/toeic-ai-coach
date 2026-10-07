@@ -23,7 +23,7 @@ export default function Home() {
     <section className="hero">
       <div><p className="eyebrow">YOUR TOEIC JOURNEY</p><h1>เรียนให้ตรงจุด<br/><span>เพื่อไปให้ถึง 650</span></h1>
         <p className="subtitle">ระบบวิเคราะห์ข้อที่คุณทำ เพื่อค้นหาจุดอ่อนและแนะนำสิ่งที่ควรฝึกต่อ</p>
-        <button className="primary" onClick={()=>setStarted(!started)}>{started?"กำลังเตรียมแบบฝึกหัด...":"เริ่มทำแบบฝึกหัด"}</button>
+        <button className="primary" onClick={()=>{window.location.href="/practice"}}>เริ่มทำแบบฝึกหัด</button>
       </div>
       <div className="score-card"><p>Current estimated score</p><div className="big-score">523</div>
         <div className="target">เป้าหมาย <b>650</b> · เหลืออีก 127 คะแนน</div>
