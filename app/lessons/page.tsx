@@ -11,37 +11,52 @@ const lessons:Lesson[] = [{"category":"Foundation 01","title":"เริ่ม�
 
 export default function Lessons() {
   const [active,setActive]=useState(0);
+  const [completed,setCompleted]=useState<number[]>(()=>{if(typeof window==="undefined")return [];try{return JSON.parse(localStorage.getItem("toeic_completed_lessons")||"[]")}catch{return []}});
+  const [quizMode,setQuizMode]=useState(false),[quizIndex,setQuizIndex]=useState(0),[quizAnswers,setQuizAnswers]=useState<number[]>([]),[quizDone,setQuizDone]=useState(false);
   const lesson=lessons[active];
+  function saveProgress(next:number[]){setCompleted(next);if(typeof window!=="undefined")localStorage.setItem("toeic_completed_lessons",JSON.stringify(next));}
+  function resetQuiz(){setQuizMode(true);setQuizIndex(0);setQuizAnswers([]);setQuizDone(false)}
+  function answer(i:number){if(quizAnswers[quizIndex]!==undefined)return;setQuizAnswers(v=>[...v,i])}
+  const makeQuiz=(l:Lesson)=>[
+    {q:"ข้อ 1: ข้อไหนสอดคล้องกับหลักสำคัญของบทนี้มากที่สุด?",choices:[l.rules[0],l.rules[1]||l.rules[0],"เดาคำตอบจากคำที่คุ้น","เลือกตัวเลือกที่ยาวที่สุด"],a:0,why:"เริ่มจากหลักสำคัญที่บทเรียนสอน ไม่ใช่เดาจากความคุ้นเคย"},
+    {q:"ข้อ 2: ข้อใดเป็นตัวอย่างที่บทนี้ต้องการให้จำ?",choices:[l.examples[0],l.rules[0],"คำตอบที่มีคำซ้ำกับโจทย์เสมอ","ไม่มีข้อถูก"],a:0,why:"ตัวอย่างคือ pattern ที่ควรนำไปใช้ในโจทย์จริง"},
+    {q:"ข้อ 3: ถ้าเจอโจทย์เรื่อง "+l.title+" ใน TOEIC ควรเริ่มคิดอย่างไร?",choices:[l.shortcut,"แปลทุกคำก่อนเสมอ","เลือกคำที่ยาวที่สุด","ข้ามทันที"],a:0,why:"ทางลัดของบทนี้คือจุดเริ่มต้นในการตัดตัวเลือกอย่างรวดเร็ว"}
+  ];
+  const quiz=makeQuiz(lesson),score=quizAnswers.reduce((s,x,i)=>s+(x===quiz[i].a?1:0),0),pass=score>=2;
+  function finishQuiz(){if(!pass){setQuizDone(true);return}saveProgress(Array.from(new Set([...completed,active])));setQuizDone(true)}
+  function nextLesson(){if(active<lessons.length-1){setActive(active+1);setQuizMode(false);setQuizDone(false);setQuizAnswers([]);setQuizIndex(0)}}
+  const isUnlocked=(i:number)=>i===0||completed.includes(i-1);
   return <main className="page lessons-page">
-    <header className="topbar">
-      <div className="brand"><div className="logo">T</div><div><strong>TOEIC AI Coach</strong><span>คอร์สจาก 0 → 650</span></div></div>
-      <a className="profile" href="/">Dashboard</a>
-    </header>
-
-    <section className="lesson-hero">
-      <div><p className="eyebrow">ZERO → TOEIC 650</p>
-        <h1>ปูพื้นฐานจากศูนย์<br/><span>แล้วค่อยไปข้อสอบจริง</span></h1>
-        <p className="subtitle">ไม่ถือว่าคุณรู้อังกฤษมาก่อน บทเรียนจะพาไล่ตั้งแต่โครงสร้างประโยค คำศัพท์พื้นฐาน Grammar สำคัญ ไปจนถึงเทคนิค TOEIC</p>
-      </div>
-      <div className="shortcut-card"><div>🚀</div><strong>เส้นทางแนะนำ</strong><p>พื้นฐาน 01–09 → Part 5 → Part 2 → Part 3 → Part 7</p></div>
-    </section>
-
+    <header className="topbar"><div className="brand"><div className="logo">T</div><div><strong>TOEIC AI Coach</strong><span>คอร์สจาก 0 → 650</span></div></div><a className="profile" href="/">Dashboard</a></header>
+    <section className="lesson-hero"><div><p className="eyebrow">ZERO → TOEIC 650</p><h1>เรียนให้เข้าใจจริง<br/><span>เรียนจบ → สอบ → ผ่าน → ปลดล็อกบทต่อไป</span></h1><p className="subtitle">ทุกบทมีคำอธิบาย ตัวอย่าง วิธีคิด ทางลัด และแบบทดสอบท้ายบท ไม่ใช่แค่สรุปสั้น ๆ</p></div><div className="shortcut-card"><div>🎯</div><strong>ระบบผ่านบท</strong><p>เรียน → ทำ Quiz 3 ข้อ → ต้องได้อย่างน้อย 2/3 → ปลดล็อกบทถัดไป</p></div></section>
+    <div className="lesson-progress"><b>ความคืบหน้า</b><span>\${completed.length}/\${lessons.length} บท</span><div className="progress"><span style={{width:\`\${Math.round(completed.length/lessons.length*100)}%\`}}/></div></div>
     <div className="lesson-layout">
-      <aside className="lesson-list">{lessons.map((l,i)=><button key={l.title} className={i===active?"lesson-nav active":"lesson-nav"} onClick={()=>setActive(i)}><span>{String(i+1).padStart(2,"0")}</span><div><b>{l.title}</b><small>{l.category} · {l.time}</small></div></button>)}</aside>
+      <aside className="lesson-list">{lessons.map((l,i)=>{const unlocked=isUnlocked(i);return <button key={l.title} disabled={!unlocked} className={i===active?"lesson-nav active":"lesson-nav"} onClick={()=>{setActive(i);setQuizMode(false);setQuizDone(false);setQuizAnswers([]);setQuizIndex(0)}}><span>{completed.includes(i)?"✓":String(i+1).padStart(2,"0")}</span><div><b>{unlocked?l.title:"🔒 "+l.title}</b><small>{l.category} · {l.time}{completed.includes(i)?" · ผ่านแล้ว":""}</small></div></button>})}</aside>
       <section className="lesson-content">
-        <div className="lesson-meta"><span>{lesson.category}</span><span>{lesson.time}</span><span>{lesson.level}</span></div>
-        <h2>{lesson.title}</h2>
-        <p className="lesson-goal"><b>🎯 เป้าหมาย:</b> {lesson.goal}</p>
-        <div className="shortcut"><b>⚡ ทางลัดที่ต้องจำ</b><p>{lesson.shortcut}</p></div>
-        <div className="lesson-section"><h3>1. ปูพื้นความเข้าใจ</h3><p>{lesson.concept}</p></div>
-        <div className="lesson-section"><h3>2. หลักที่ต้องจำ</h3><div className="lesson-points">{lesson.rules.map((p,i)=><div key={p}><span>{i+1}</span><p>{p}</p></div>)}</div></div>
-        <div className="lesson-section"><h3>3. ตัวอย่างที่ต้องเห็นภาพ</h3><div className="examples">{lesson.examples.map((x,i)=><div className="example" key={i}><b>ตัวอย่าง {i+1}</b><p>{x}</p></div>)}</div></div>
-        <div className="lesson-section"><h3>4. จุดที่คนเริ่มต้นพลาด</h3><div className="trap-list">{lesson.traps.map((x,i)=><div key={x}><b>⚠ {i+1}</b><p>{x}</p></div>)}</div></div>
-        <div className="lesson-section"><h3>5. วิธีใช้ในห้องสอบ</h3><ol className="strategy">{lesson.strategy.map(x=><li key={x}>{x}</li>)}</ol></div>
-        <div className="lesson-actions"><a className="primary link-button" href="/practice">ไปทำโจทย์ →</a><button className="secondary" onClick={()=>setActive(Math.min(active+1,lessons.length-1))}>{active===lessons.length-1?"จบบทเรียน":"บทถัดไป →"}</button></div>
+        {!quizMode ? <>
+          <div className="lesson-meta"><span>{lesson.category}</span><span>{lesson.time}</span><span>{lesson.level}</span></div>
+          <h2>{lesson.title}</h2><p className="lesson-goal"><b>🎯 เป้าหมาย:</b> {lesson.goal}</p>
+          <div className="shortcut"><b>⚡ ทางลัดที่ต้องจำ</b><p>{lesson.shortcut}</p><small>ทางลัดคือสิ่งที่ให้นึกถึงก่อนลงมือทำข้อสอบ ไม่ใช่การข้ามความเข้าใจ</small></div>
+          <div className="lesson-section detailed"><h3>1. อธิบายแบบละเอียด — ต้องเข้าใจอะไร?</h3><p>{lesson.concept}</p><p>จุดประสงค์ไม่ใช่ให้คุณท่องคำตอบ แต่ให้คุณเห็น “สัญญาณ” ในประโยคแล้วรู้ว่าจะคิดต่ออย่างไร เมื่อเห็นโจทย์ ให้ถามตัวเองว่า <b>โจทย์กำลังทดสอบเรื่องอะไร?</b> จากนั้นใช้กฎของบทนี้ตัดตัวเลือก</p>
+          {lesson.category.startsWith("Foundation")&&<p>สำหรับคนเริ่มจาก 0 ให้เข้าใจความหมายก่อน แล้วอ่านตัวอย่างออกเสียง 2–3 รอบ การเห็น + อ่าน + พูด ช่วยให้ pattern ติดหัวกว่าการอ่านอย่างเดียว</p>}
+          {lesson.category.startsWith("Vocabulary")&&<p>ศัพท์ TOEIC ไม่ควรจำเป็นคำโดด ๆ ให้จำเป็น “ก้อนคำ” เช่น verb + noun หรือคำที่มักอยู่ในสถานการณ์เดียวกัน และแต่งประโยคของตัวเองอย่างน้อย 1 ประโยค</p>}
+          {lesson.category.startsWith("Listening")&&<p>Listening ไม่ได้วัดว่าคุณแปลได้ทุกคำ แต่ดูว่าจับข้อมูลที่โจทย์ต้องการได้หรือไม่ รอบแรกจับภาพรวม รอบสองจับ keyword รอบสามตรวจคำที่หายไป</p>}
+          {lesson.category.startsWith("Reading")&&<p>Reading ต้องคิดเรื่อง “หลักฐาน” คำตอบที่ถูกควรมีข้อความหรือ paraphrase รองรับ อย่าเลือกเพียงเพราะคำในตัวเลือกเหมือนกับคำในโจทย์</p>}</div>
+          <div className="lesson-section"><h3>2. หลักที่ต้องจำ + วิธีสังเกต</h3><div className="lesson-points">{lesson.rules.map((p,i)=><div key={p}><span>{i+1}</span><p><b>{p}</b><br/><small>ถามตัวเองว่า “ถ้าเจอสิ่งนี้ในข้อสอบ ฉันจะสังเกตตรงไหนก่อน?”</small></p></div>)}</div></div>
+          <div className="lesson-section"><h3>3. ตัวอย่างแบบค่อย ๆ คิด</h3><div className="examples">{lesson.examples.map((x,i)=><div className="example" key={i}><b>ตัวอย่าง {i+1}</b><p>{x}</p><small>วิธีคิด: หา keyword → ใช้กฎ → ตัดตัวเลือกที่ขัดกฎ → เช็กความหมาย</small></div>)}</div></div>
+          <div className="lesson-section"><h3>4. จุดที่คนเริ่มต้นพลาด</h3><div className="trap-list">{lesson.traps.map((x,i)=><div key={x}><b>⚠ {i+1}</b><p>{x}</p></div>)}</div></div>
+          <div className="lesson-section"><h3>5. วิธีใช้ในห้องสอบ</h3><ol className="strategy">{lesson.strategy.map(x=><li key={x}>{x}</li>)}</ol></div>
+          <div className="lesson-check"><h3>🧠 พร้อมสอบท้ายบทหรือยัง?</h3><p>เรียนให้เข้าใจก่อน แล้วทำ Quiz 3 ข้อ หากได้อย่างน้อย 2/3 ระบบจะบันทึกว่าผ่านและปลดล็อกบทถัดไป</p></div>
+          <div className="lesson-actions"><button className="primary" onClick={resetQuiz}>ทำแบบทดสอบท้ายบท →</button></div>
+        </> : <div className="quiz-panel">
+          <div className="lesson-meta"><span>MASTERY QUIZ</span><span>{quizIndex+1}/{quiz.length} ข้อ</span></div>
+          {!quizDone ? <><h2>แบบทดสอบ: {lesson.title}</h2><p className="subtitle">ตอบจากสิ่งที่เพิ่งเรียน ถ้าผิดจะมีคำอธิบายให้ทบทวน</p>
+            <div className="quiz-question"><h3>{quiz[quizIndex].q}</h3><div className="choices">{quiz[quizIndex].choices.map((ch,i)=>{const selected=quizAnswers[quizIndex]===i;return <button key={i} className={selected?"choice selected":"choice"} onClick={()=>answer(i)}>{String.fromCharCode(65+i)}. {ch}</button>})}</div>
+            {quizAnswers[quizIndex]!==undefined&&<div className="feedback"><b>{quizAnswers[quizIndex]===quiz[quizIndex].a?"✓ ถูก":"✕ ยังไม่ถูก"}</b><p>{quiz[quizIndex].why}</p></div>}
+            <button className="primary next-button" disabled={quizAnswers[quizIndex]===undefined} onClick={()=>quizIndex<quiz.length-1?setQuizIndex(quizIndex+1):finishQuiz()}>{quizIndex<quiz.length-1?"ข้อถัดไป →":"ส่งคำตอบ"}</button></div>
+          </> : <div className="result-card"><p className="eyebrow">LESSON RESULT</p><div className="result-score">{score}/{quiz.length}</div><h2>{pass?"🎉 ผ่านบทนี้แล้ว":"ยังไม่ผ่าน — กลับไปอ่านจุดที่พลาดแล้วลองใหม่"}</h2><p>{pass?"บทถัดไปถูกปลดล็อกแล้ว":"ต้องได้อย่างน้อย 2/3 ข้อจึงจะปลดล็อกบทต่อไป"}</p><div className="lesson-actions"><button className="secondary" onClick={resetQuiz}>ทำใหม่</button>{pass&&active<lessons.length-1&&<button className="primary" onClick={nextLesson}>ไปบทถัดไป →</button>}</div></div>}
+        </div>}
       </section>
     </div>
-
-    <section className="card method"><p className="eyebrow">LEARNING SYSTEM</p><h2>เรียนแบบคนพื้นฐาน 0</h2><div className="method-grid"><div><b>01 · Learn</b><span>เข้าใจภาษาไทยก่อน</span></div><div><b>02 · Pattern</b><span>จำรูปแบบที่ใช้บ่อย</span></div><div><b>03 · Practice</b><span>ทำโจทย์ทันที</span></div><div><b>04 · Analyze</b><span>แก้เฉพาะจุดที่ผิด</span></div></div></section>
   </main>;
 }
