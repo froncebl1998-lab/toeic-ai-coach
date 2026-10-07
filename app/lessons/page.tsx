@@ -25,7 +25,7 @@ export default function Lessons() {
   return <main className="page lessons-page">
     <header className="topbar"><div className="brand"><div className="logo">T</div><div><strong>TOEIC AI Coach</strong><span>คอร์สจาก 0 → 650</span></div></div><a className="profile" href="/">Dashboard</a></header>
     <section className="lesson-hero"><div><p className="eyebrow">ZERO → TOEIC 650</p><h1>เรียนให้เข้าใจจริง<br/><span>เรียนจบ → สอบ → ผ่าน → ปลดล็อกบทต่อไป</span></h1><p className="subtitle">ทุกบทมีคำอธิบาย ตัวอย่าง วิธีคิด ทางลัด และแบบทดสอบท้ายบท ไม่ใช่แค่สรุปสั้น ๆ</p></div><div className="shortcut-card"><div>🎯</div><strong>ระบบผ่านบท</strong><p>เรียน → ทำ Quiz 5 ข้อ → ต้องได้อย่างน้อย 4/5 → ปลดล็อกบทถัดไป</p></div></section>
-    <div className="lesson-progress"><b>ความคืบหน้า</b><span>\${completed.length}/\${lessons.length} บท</span><div className="progress"><span style={{width:\`\${Math.round(completed.length/lessons.length*100)}%\`}}/></div></div>
+    <div className="lesson-progress"><b>ความคืบหน้า</b><span>${completed.length}/${lessons.length} บท</span><div className="progress"><span style={{width:\`${Math.round(completed.length/lessons.length*100)}%\`}}/></div></div>
     <div className="lesson-layout">
       <aside className="lesson-list">{lessons.map((l,i)=>{const unlocked=isUnlocked(i);return <button key={l.title} disabled={!unlocked} className={i===active?"lesson-nav active":"lesson-nav"} onClick={()=>{setActive(i);setQuizMode(false);setQuizDone(false);setQuizAnswers([]);setQuizIndex(0)}}><span>{completed.includes(i)?"✓":String(i+1).padStart(2,"0")}</span><div><b>{unlocked?l.title:"🔒 "+l.title}</b><small>{l.category} · {l.time}{completed.includes(i)?" · ผ่านแล้ว":""}</small></div></button>})}</aside>
       <section className="lesson-content">
@@ -42,7 +42,7 @@ export default function Lessons() {
           <div className="lesson-section"><h3>3. ตัวอย่างแบบค่อย ๆ คิด</h3><div className="examples">{lesson.examples.map((x,i)=><div className="example" key={i}><b>ตัวอย่าง {i+1}</b><p>{x}</p><small>วิธีคิด: หา keyword → ใช้กฎ → ตัดตัวเลือกที่ขัดกฎ → เช็กความหมาย</small></div>)}</div></div>
           <div className="lesson-section"><h3>4. จุดที่คนเริ่มต้นพลาด</h3><div className="trap-list">{lesson.traps.map((x,i)=><div key={x}><b>⚠ {i+1}</b><p>{x}</p></div>)}</div></div>
           <div className="lesson-section"><h3>5. วิธีใช้ในห้องสอบ</h3><ol className="strategy">{lesson.strategy.map(x=><li key={x}>{x}</li>)}</ol></div>
-          <div className="lesson-check"><h3>🧠 พร้อมสอบท้ายบทหรือยัง?</h3><p>เรียนให้เข้าใจก่อน แล้วทำ Quiz 3 ข้อ หากได้อย่างน้อย 2/3 ระบบจะบันทึกว่าผ่านและปลดล็อกบทถัดไป</p></div>
+          <div className="lesson-check"><h3>🧠 พร้อมสอบท้ายบทหรือยัง?</h3><p>เรียนให้เข้าใจก่อน แล้วทำ Quiz 5 ข้อ หากได้อย่างน้อย 4/5 ระบบจะบันทึกว่าผ่านและปลดล็อกบทถัดไป</p></div>
           <div className="lesson-actions"><button className="primary" onClick={resetQuiz}>ทำแบบทดสอบท้ายบท →</button></div>
         </> : <div className="quiz-panel">
           <div className="lesson-meta"><span>MASTERY QUIZ</span><span>{quizIndex+1}/{quiz.length} ข้อ</span></div>
