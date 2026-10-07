@@ -17,7 +17,7 @@ export default function Home() {
   return <main className="page">
     <header className="topbar">
       <div className="brand"><div className="logo">T</div><div><strong>TOEIC AI Coach</strong><span>Personal learning dashboard</span></div></div>
-      <button className="profile">My Progress</button>
+      <a className="profile" href="/lessons">📚 บทเรียน</a>
     </header>
 
     <section className="hero">
@@ -38,7 +38,7 @@ export default function Home() {
       <div className="card recommendation"><p className="eyebrow">AI RECOMMENDATION</p><h2>ควรฝึกอะไรต่อ?</h2>
         <p className="ai-text">จากข้อมูลตัวอย่าง จุดที่มีโอกาสช่วยเพิ่มคะแนนได้เร็วคือ <b>Grammar และ Part 3 Listening</b></p>
         <div className="focus"><div><span>01</span><strong>Subject-Verb Agreement</strong><small>Grammar · 15 นาที</small></div><div><span>02</span><strong>Part 3 Listening</strong><small>Conversation · 15 นาที</small></div></div>
-        <button className="secondary" onClick={()=>setStarted(true)}>ฝึกตามแผนวันนี้ →</button>
+        <a className="secondary link-button" href="/lessons">เรียนบทเรียนก่อน →</a>
       </div>
     </section>
 
